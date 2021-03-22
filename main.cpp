@@ -33,7 +33,7 @@ using namespace __fs::filesystem;
 #define TRENDLINETYPE 0 //linear 0, quadratic 1
 
 string file_dir = "0322_1130";
-string MODE = "train";
+string MODE = "test";
 
 bool readData(string filename, vector<vector<string>> &data_vector, int &size, int &day_number) {
     cout << filename << endl;
@@ -144,7 +144,7 @@ void createStock(Stock* stock_list, int size, int range_day_number, string **dat
     }
 }
 
-void preSet(Date& current_date, Date& finish_date, int SLIDETYPE, string& TYPE) {
+void preSet(string mode, Date& current_date, Date& finish_date, int SLIDETYPE, string& TYPE) {
     string STARTYEAR;
     string STARTMONTH;
     string ENDYEAR;
@@ -248,7 +248,11 @@ void preSet(Date& current_date, Date& finish_date, int SLIDETYPE, string& TYPE) 
         ENDYEAR = "2018";
         ENDMONTH = "12";
         TYPE = "M#";
-        train_range = 12;
+        if(mode == "train"){
+            train_range = 1;
+        }else{
+            train_range = 12;
+        }
         slide_number = 1;
         break;
     case 11:
@@ -257,7 +261,11 @@ void preSet(Date& current_date, Date& finish_date, int SLIDETYPE, string& TYPE) 
         ENDYEAR = "2018";
         ENDMONTH = "10";
         TYPE = "Q#";
-        train_range = 12;
+        if(mode == "train"){
+            train_range = 3;
+        }else{
+            train_range = 12;
+        }
         slide_number = 3;
         break;
     case 12:
@@ -266,7 +274,11 @@ void preSet(Date& current_date, Date& finish_date, int SLIDETYPE, string& TYPE) 
         ENDYEAR = "2018";
         ENDMONTH = "7";
         TYPE = "H#";
-        train_range = 12;
+        if(mode == "train"){
+            train_range = 6;
+        }else{
+            train_range = 12;
+        }
         slide_number = 6;
         break;
     }
@@ -283,7 +295,7 @@ void preSet(Date& current_date, Date& finish_date, int SLIDETYPE, string& TYPE) 
     finish_date.slide_number = slide_number;
     finish_date.train_range = train_range;
     
-    if(MODE == "test"){
+    if(mode == "test"){
         current_date.slide(train_range);
         finish_date.slide(train_range);
     }
@@ -303,12 +315,18 @@ void copyData(string *data_copy, string **data, int day_number){
     }
 }
 
-void setWindow(string &start_date, string &end_date, int &start_index, int &end_index, Date current_date, Date finish_data, string* data_copy, string **data, int day_number, int &range_day_number){
+void setWindow(string mode, string &start_date, string &end_date, int &start_index, int &end_index, Date current_date, Date finish_data, string* data_copy, string **data, int day_number, int &range_day_number){
     bool sw = false;//判斷是否找到開始日期
     int flag = 0;//判斷是否找到結束月份
     for(int j = 0; j < day_number; j++){
         string temp1 = current_date.getYear() + current_date.getMon();
-        string temp2 = current_date.getRangeEnd(current_date.train_range - 1).getYear() + current_date.getRangeEnd(current_date.train_range - 1).getMon();
+        string temp2;
+        if(mode == "train"){
+            temp2 = current_date.getRangeEnd(current_date.train_range - 1).getYear() + current_date.getRangeEnd(current_date.train_range - 1).getMon();
+        }else{
+            temp2 = current_date.getRangeEnd(current_date.slide_number - 1).getYear() + current_date.getRangeEnd(current_date.slide_number - 1).getMon();
+        }
+        
         if(!sw && temp1 == data_copy[j]){
             start_date = data[j+1][0];
             start_index = j + 1;
@@ -646,7 +664,7 @@ int main(int argc, const char * argv[]) {
     for(int s = 0; s < 13; s++){
         srand(114);
         int current_funds = FUNDS;
-        preSet(current_date, finish_date, s, TYPE);
+        preSet(MODE, current_date, finish_date, s, TYPE);
         START = clock();
         createDir(file_dir, TYPE);
         cout << TYPE << endl;
@@ -656,7 +674,7 @@ int main(int argc, const char * argv[]) {
             int start_index;
             int end_index;
             int range_day_number;
-            setWindow(start_date, end_date, start_index, end_index, current_date, finish_date, data_copy, data, day_number, range_day_number);
+            setWindow(MODE, start_date, end_date, start_index, end_index, current_date, finish_date, data_copy, data, day_number, range_day_number);
             Stock* stock_list = new Stock[size];
             createStock(stock_list, size, range_day_number, data, start_index, end_index);
             
